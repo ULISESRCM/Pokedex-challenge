@@ -1,25 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setPokemons, removePokemon } from './redux/actions';
+import PokemonGallery from './components/PokemonGallery';
 
-function App() {
+const App = () => {
+  const dispatch = useDispatch();
+  const pokemons = useSelector((state) => state.pokemons);
+
+  useEffect(() => {
+    // Realizar la llamada a la API para obtener los pokemons
+    fetch('https://pokeapi.co/api/v2/pokemon?limit=20')
+      .then((response) => response.json())
+      .then((data) => {
+        // Mapear los datos de los pokemons
+        const pokemonPromises = data.results.map((result) =>
+          fetch(result.url).then((response) => response.json())
+        );
+
+        Promise.all(pokemonPromises).then((pokemonData) => {
+          // Guardar los datos de los pokemons en el estado global
+          dispatch(setPokemons(pokemonData));
+        });
+      });
+  }, [dispatch]);
+
+  const handleRemovePokemon = (pokemonName) => {
+    dispatch(removePokemon(pokemonName));
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Pokemon Gallery</h1>
+      <PokemonGallery pokemons={pokemons} />
+      <button onClick={() => handleRemovePokemon('Pikachu')}>
+        Remove Pikachu
+      </button>
     </div>
   );
-}
+};
 
 export default App;
